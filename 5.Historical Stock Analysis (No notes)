@@ -1,0 +1,57 @@
+import matplotlib.pyplot as plt
+import yfinance as yf
+
+stock = yf.download("AAPL",
+                    start="2021-01-01",
+                    end="2026-01-01")
+
+stock["Daily Return"] = stock["Close"].pct_change() * 100
+
+print(stock.tail())
+
+average_return = stock["Daily Return"].mean()
+print(f"{average_return:.2%}")
+
+volatility = stock["Daily Return"].std()
+print(f"{volatility:.2%}")
+
+best_day = stock["Daily Return"].idxmax()
+print(best_day)
+print(stock.loc[best_day])
+
+worst_day = stock["Daily Return"].idxmin()
+print(worst_day)
+print(stock.loc[worst_day])
+
+plt.figure(figsize=(12,6))
+plt.plot(stock["Close"])
+plt.title("Apple Stock Price History")
+plt.xlabel("Date")
+plt.ylabel("Price ($)")
+plt.show()
+
+stock["200 Day MA"] = stock["Close"].rolling(window=200).mean()
+
+plt.plot(stock["Close"], label="Price")
+plt.plot(stock["200 Day MA"], label="200 Day MA")
+plt.legend()
+plt.show()
+
+delta = stock["Close"].diff()
+
+gain = delta.clip(lower=0)
+loss = -delta.clip(upper=0)
+
+avg_gain = gain.rolling(14).mean()
+avg_loss = loss.rolling(14).mean()
+
+rs = avg_gain / avg_loss
+
+stock["RSI"] = 100 - (100 / (1 + rs))
+
+short = stock["Close"].ewm(span=12).mean()
+long = stock["Close"].ewm(span=26).mean()
+
+stock["MACD"] = short - long
+
+print(stock.tail())
